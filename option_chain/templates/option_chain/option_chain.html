@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NSE Option Chain Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #34495e;
+            font-size: 0.9em;
+        }
+
+        .control-group select,
+        .control-group input {
+            padding: 10px 15px;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .control-group select:focus,
+        .control-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .info-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .info-item {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            border: 1px solid #dee2e6;
+        }
+
+        .info-item .label {
+            font-size: 0.9em;
+            color: #666;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .info-item .value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .table-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 15px 20px;
+            font-weight: 600;
+            text-align: center;
+            font-size: 1.1em;
+        }
+
+        .option-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85em;
+        }
+
+        .option-table th {
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+            color: white;
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.8em;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .option-table td {
+            padding: 10px 8px;
+            text-align: center;
+            border-bottom: 1px solid #e9ecef;
+            transition: background-color 0.3s ease;
+        }
+
+        .option-table tr:hover {
+            background-color: rgba(102, 126, 234, 0.05);
+        }
+
+        .call-section {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        }
+
+        .strike-section {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .put-section {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        }
+
+        .positive {
+            color: #cd1414;
+            font-weight: 600;
+        }
+
+        .negative {
+            color: #1ad713;
+            font-weight: 600;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            color: white;
+            font-size: 1.2em;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .error {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
+            border: 1px solid #f5c6cb;
+        }
+
+        .greek-tooltip {
+            position: relative;
+            cursor: help;
+        }
+
+        .greek-tooltip .tooltip {
+            visibility: hidden;
+            width: 200px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.8em;
+        }
+
+        .greek-tooltip:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #667eea;
+            background: transparent;
+            color: #667eea;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .filter-btn.active,
+        .filter-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .chart-container {
+            margin-top: 20px;
+            height: 400px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .controls {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .option-table {
+                font-size: 0.75em;
+            }
+            
+            .option-table th,
+            .option-table td {
+                padding: 8px 4px;
+            }
+
+            .chart-container {
+                height: 300px;
+            }
+        }
+
+        .scroll-container {
+            max-height: 70vh;
+            overflow-y: auto;
+            border-radius: 0 0 15px 15px;
+        }
+
+        .scroll-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scroll-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .scroll-container::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px;
+        }
+
+        .scroll-container::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>NSE Option Chain Dashboard(By Karan Ghadage)</h1>
+            <div class="controls">
+                <div class="control-group">
+                    <label for="symbolSelect">Symbol</label>
+                    <select id="symbolSelect">
+                        <option value="NIFTY">NIFTY</option>
+                        <option value="BANKNIFTY">BANKNIFTY</option>
+                        <option value="RELIANCE">RELIANCE</option>
+                        <option value="TCS">TCS</option>
+                        <option value="HDFCBANK">HDFCBANK</option>
+                        <option value="INFY">INFY</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="riskFreeRate">Risk Free Rate (%)</label>
+                    <input type="number" id="riskFreeRate" value="6.0" step="0.1" min="0" max="20">
+                </div>
+                <div class="control-group">
+                    <label for="useMarketIV">Use Market IV</label>
+                    <select id="useMarketIV">
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                </div>
+                <button class="btn" onclick="fetchOptionChain()">Fetch Data</button>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div>Loading option chain data...</div>
+        </div>
+
+        <div class="info-panel" id="infoPanel" style="display: none;">
+            <div class="info-grid" id="infoGrid"></div>
+        </div>
+
+        <div class="filters" id="filters" style="display: none;">
+            <button class="filter-btn active" onclick="filterOptions('all')">All Strikes</button>
+            <button class="filter-btn" onclick="filterOptions('itm')">ITM Options</button>
+            <button class="filter-btn" onclick="filterOptions('atm')">ATM ±5</button>
+            <button class="filter-btn" onclick="filterOptions('otm')">OTM Options</button>
+            <button class="filter-btn" onclick="filterOptions('liquid')">High Volume</button>
+        </div>
+
+        <div class="table-container" id="tableContainer" style="display: none;">
+            <div class="table-header">Option Chain with Greeks</div>
+            <div class="scroll-container">
+                <table class="option-table">
+                    <thead>
+                        <tr>
+                            <th colspan="9" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">CALLS</th>
+                            <th rowspan="2" style="background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);">STRIKE</th>
+                            <th colspan="9" style="background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%);">PUTS</th>
+                        </tr>
+                        <tr>
+                            <th>OI</th>
+                            <th>Δ OI</th>
+                            <th>Volume</th>
+                            <th>LTP</th>
+                            <th class="greek-tooltip">Δ<span class="tooltip">Delta: Price sensitivity</span></th>
+                            <th class="greek-tooltip">Γ<span class="tooltip">Gamma: Delta change rate</span></th>
+                            <th class="greek-tooltip">Θ<span class="tooltip">Theta: Time decay</span></th>
+                            <th class="greek-tooltip">ν<span class="tooltip">Vega: Volatility sensitivity</span></th>
+                            <th class="greek-tooltip">IV<span class="tooltip">Implied Volatility</span></th>
+                            
+                            <th class="greek-tooltip">IV<span class="tooltip">Implied Volatility</span></th>
+                            <th class="greek-tooltip">ν<span class="tooltip">Vega: Volatility sensitivity</span></th>
+                            <th class="greek-tooltip">Θ<span class="tooltip">Theta: Time decay</span></th>
+                            <th class="greek-tooltip">Γ<span class="tooltip">Gamma: Delta change rate</span></th>
+                            <th class="greek-tooltip">Δ<span class="tooltip">Delta: Price sensitivity</span></th>
+                            <th>LTP</th>
+                            <th>Volume</th>
+                            <th>Δ OI</th>
+                            <th>OI</th>
+                        </tr>
+                    </thead>
+                    <tbody id="optionTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="chart-container" id="oiChangeChartContainer" style="display: none;">
+            <canvas id="oiChangeChart"></canvas>
+        </div>
+
+        <div class="chart-container" id="oiChartContainer" style="display: none;">
+            <canvas id="oiChart"></canvas>
+        </div>
+
+        <div id="errorContainer"></div>
+    </div>
+
+    <script>
+        let currentData = null;
+        let filteredData = null;
+        let oiChangeChart = null;
+        let oiChart = null;
+
+        // Fetch option chain data
+        async function fetchOptionChain() {
+            const symbol = document.getElementById('symbolSelect').value;
+            
+            document.getElementById('loading').classList.add('show');
+            document.getElementById('tableContainer').style.display = 'none';
+            document.getElementById('infoPanel').style.display = 'none';
+            document.getElementById('filters').style.display = 'none';
+            document.getElementById('oiChangeChartContainer').style.display = 'none';
+            document.getElementById('oiChartContainer').style.display = 'none';
+            document.getElementById('errorContainer').innerHTML = '';
+
+            try {
+                const response = await fetch(`/api/option-chain/${symbol}/`);
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                currentData = data;
+                filteredData = data.data;
+                displayData(data);
+                
+            } catch (error) {
+                displayError(`Error fetching data: ${error.message}`);
+            } finally {
+                document.getElementById('loading').classList.remove('show');
+            }
+        }
+
+        // Display the fetched data
+        function displayData(data) {
+            displayInfoPanel(data);
+            displayOptionTable(filteredData);
+            displayOIChangeChart({ data: filteredData });
+            displayOIChart({ data: filteredData });
+            document.getElementById('tableContainer').style.display = 'block';
+            document.getElementById('infoPanel').style.display = 'block';
+            document.getElementById('filters').style.display = 'flex';
+            document.getElementById('oiChangeChartContainer').style.display = 'block';
+            document.getElementById('oiChartContainer').style.display = 'block';
+        }
+
+        // Display info panel
+        function displayInfoPanel(data) {
+            const infoGrid = document.getElementById('infoGrid');
+            infoGrid.innerHTML = `
+                <div class="info-item">
+                    <div class="label">Symbol</div>
+                    <div class="value">${data.symbol}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Underlying Price</div>
+                    <div class="value">₹${data.underlying_price.toFixed(2)}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Expiry Date</div>
+                    <div class="value">${data.expiry_date}</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Days to Expiry</div>
+                    <div class="value">${data.days_to_expiry} days</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Risk Free Rate</div>
+                    <div class="value">${(data.risk_free_rate * 100).toFixed(2)}%</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Total Strikes</div>
+                    <div class="value">${data.data.length}</div>
+                </div>
+            `;
+        }
+
+        // Display option table
+        function displayOptionTable(data) {
+            const tbody = document.getElementById('optionTableBody');
+            tbody.innerHTML = '';
+
+            data.forEach(option => {
+                const row = document.createElement('tr');
+                
+                const isITMCall = option.strike_price < currentData.underlying_price;
+                const isITMPut = option.strike_price > currentData.underlying_price;
+                const isATM = Math.abs(option.strike_price - currentData.underlying_price) <= currentData.underlying_price * 0.02;
+
+                row.innerHTML = `
+                    <td class="call-section">${formatNumber(option.call_oi)}</td>
+                    <td class="call-section ${option.call_change_oi >= 0 ? 'positive' : 'negative'}">${formatNumber(option.call_change_oi)}</td>
+                    <td class="call-section">${formatNumber(option.call_volume)}</td>
+                    <td class="call-section ${isITMCall ? 'positive' : ''}">${option.call_ltp.toFixed(2)}</td>
+                    <td class="call-section">${option.call_delta.toFixed(3)}</td>
+                    <td class="call-section">${option.call_gamma.toFixed(6)}</td>
+                    <td class="call-section ${option.call_theta < 0 ? 'negative' : ''}">${option.call_theta.toFixed(3)}</td>
+                    <td class="call-section">${option.call_vega.toFixed(3)}</td>
+                    <td class="call-section">${(option.call_iv * 100).toFixed(1)}%</td>
+                    
+                    <td class="strike-section ${isATM ? 'positive' : ''}">${option.strike_price}</td>
+                    
+                    <td class="put-section">${(option.put_iv * 100).toFixed(1)}%</td>
+                    <td class="put-section">${option.put_vega.toFixed(3)}</td>
+                    <td class="put-section ${option.put_theta < 0 ? 'negative' : ''}">${option.put_theta.toFixed(3)}</td>
+                    <td class="put-section">${option.put_gamma.toFixed(6)}</td>
+                    <td class="put-section">${option.put_delta.toFixed(3)}</td>
+                    <td class="put-section ${isITMPut ? 'positive' : ''}">${option.put_ltp.toFixed(2)}</td>
+                    <td class="put-section">${formatNumber(option.put_volume)}</td>
+                    <td class="put-section ${option.put_change_oi >= 0 ? 'positive' : 'negative'}">${formatNumber(option.put_change_oi)}</td>
+                    <td class="put-section">${formatNumber(option.put_oi)}</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        // Display Change in OI chart
+        function displayOIChangeChart(data) {
+            const ctx = document.getElementById('oiChangeChart').getContext('2d');
+            
+            // Destroy existing chart if it exists to prevent memory leaks
+            if (oiChangeChart) {
+                oiChangeChart.destroy();
+            }
+
+            oiChangeChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.data.map(option => option.strike_price),
+                    datasets: [
+                        {
+                            label: 'Call Change in OI',
+                            data: data.data.map(option => option.call_change_oi),
+                            backgroundColor: 'rgba(220, 53, 69, 0.7)',
+                            borderColor: 'rgba(220, 53, 69, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Put Change in OI',
+                            data: data.data.map(option => option.put_change_oi),
+                            backgroundColor: 'rgba(40, 167, 69, 0.7)',
+                            borderColor: 'rgba(40, 167, 69, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Change in Open Interest by Strike Price',
+                            font: { size: 18 }
+                        },
+                        legend: { position: 'top' }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Strike Price' } },
+                        y: { title: { display: true, text: 'Change in Open Interest' }, beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        // Display OI chart
+        function displayOIChart(data) {
+            const ctx = document.getElementById('oiChart').getContext('2d');
+            
+            // Destroy existing chart if it exists to prevent memory leaks
+            if (oiChart) {
+                oiChart.destroy();
+            }
+
+            oiChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.data.map(option => option.strike_price),
+                    datasets: [
+                        {
+                            label: 'Call OI',
+                            data: data.data.map(option => option.call_oi),
+                            backgroundColor: 'rgba(220, 53, 69, 0.7)',
+                            borderColor: 'rgba(220, 53, 69, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Put OI',
+                            data: data.data.map(option => option.put_oi),
+                            backgroundColor: 'rgba(40, 167, 69, 0.7)',
+                            borderColor: 'rgba(40, 167, 69, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Open Interest by Strike Price',
+                            font: { size: 18 }
+                        },
+                        legend: { position: 'top' }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Strike Price' } },
+                        y: { title: { display: true, text: 'Open Interest' }, beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        // Filter options
+        function filterOptions(filterType) {
+            if (!currentData) return;
+
+            // Update active filter button
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const underlyingPrice = currentData.underlying_price;
+            
+            switch (filterType) {
+                case 'all':
+                    filteredData = currentData.data;
+                    break;
+                case 'itm':
+                    filteredData = currentData.data.filter(option => 
+                        option.call_ltp > 0 || option.put_ltp > 0
+                    );
+                    break;
+                case 'atm':
+                    filteredData = currentData.data.filter(option => 
+                        Math.abs(option.strike_price - underlyingPrice) <= underlyingPrice * 0.05
+                    );
+                    break;
+                case 'otm':
+                    filteredData = currentData.data.filter(option => 
+                        (option.strike_price > underlyingPrice && option.call_ltp > 0) ||
+                        (option.strike_price < underlyingPrice && option.put_ltp > 0)
+                    );
+                    break;
+                case 'liquid':
+                    filteredData = currentData.data.filter(option => 
+                        option.call_volume > 1000 || option.put_volume > 1000
+                    );
+                    break;
+            }
+            
+            displayOptionTable(filteredData);
+            displayOIChangeChart({ data: filteredData });
+            displayOIChart({ data: filteredData });
+        }
+
+        // Display error message
+        function displayError(message) {
+            const errorContainer = document.getElementById('errorContainer');
+            errorContainer.innerHTML = `<div class="error">${message}</div>`;
+        }
+
+        // Format numbers with commas
+        function formatNumber(num) {
+            if (num === 0) return '0';
+            return num.toLocaleString('en-IN');
+        }
+    </script>
+</body>
+</html>
