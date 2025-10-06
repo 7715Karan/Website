@@ -449,7 +449,7 @@
 
         /* --- Deals Section --- */
         .deals-section {
-            margin-bottom: 30px;
+            margin-bottom: 40px;
             padding: 30px;
             background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
             border-radius: 20px;
@@ -469,6 +469,64 @@
 
         .deals-section h2::before {
             font-size: 1.2em;
+        }
+
+        /* --- Events Section --- */
+        .events-section {
+            margin-bottom: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            animation: fadeIn 1s ease-out;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .events-section h2 {
+            margin-bottom: 25px;
+            color: #2c3e50;
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .events-section h2::before {
+            font-size: 1.2em;
+            content: '📅';
+        }
+
+        .events-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .event-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .event-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .event-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            border-color: rgba(102, 126, 234, 0.3);
         }
 
         /* --- Responsive --- */
@@ -515,7 +573,7 @@
 <body>
     <div class="dashboard">
         <h1>Market Dashboard</h1>
-        <p style="text-align: center; color: #666; margin-bottom: 30px; font-size: 0.9em;">By Karan Ghadage</p>
+        <p style="text-align: center; color: #312e2e; margin-bottom: 30px; font-size: 0.9em;">By Karan Ghadage</p>
 
         <!-- Navigation Buttons -->
         <div class="btn-group">
@@ -626,6 +684,39 @@
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+
+        <!-- Events Section -->
+        <div class="events-section">
+            <h2>Market Events</h2>
+            <div class="events-grid">
+                {% if nse_event %}
+                    {% for event in nse_event %}
+                        <div class="event-card">
+                            <div class="card-header">
+                                <span class="card-icon">📅</span>
+                                <h3>{{ event.symbol|default:"N/A" }} - {{ event.company|default:"-" }}</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="data-row">
+                                    <span class="label">Purpose:</span>
+                                    <span class="value">{{ event.purpose|default:"-" }}</span>
+                                </div>
+                                <div class="data-row">
+                                    <span class="label">Date:</span>
+                                    <span class="value">{{ event.date|default:"-" }}</span>
+                                </div>
+                                <div class="data-row">
+                                    <span class="label">Description:</span>
+                                    <span class="value">{{ event.bm_desc|default:"-" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No Events Data Available</p>
+                {% endif %}
+            </div>
         </div>
     </div>
 </body>

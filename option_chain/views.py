@@ -4,7 +4,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
-from nsepython import nse_get_top_gainers, nse_get_top_losers,nse_marketStatus,nse_largedeals,nse_blockdeal,nse_fiidii
+from nsepython import nse_get_top_gainers, nse_get_top_losers,nse_marketStatus,nse_largedeals,nse_blockdeal,nse_fiidii,nse_events
 
 
 def home(request):
@@ -12,12 +12,13 @@ def home(request):
         gainers_df = nse_get_top_gainers()
         losers_df = nse_get_top_losers()
         market_status = nse_marketStatus()
-        large_deals_raw = nse_largedeals()
         block_deals_raw = nse_blockdeal()
         nse_fiidii_raw = nse_fiidii()
+        nse_events_raw = nse_events()
 
         top_gainers = gainers_df.to_dict(orient="records")
         top_losers = losers_df.to_dict(orient="records")
+        nse_event = nse_events_raw.to_dict(orient="records")
         
         nse_fiidii_data = nse_fiidii_raw.to_dict(orient="records")
 
@@ -44,10 +45,9 @@ def home(request):
         "top_losers": top_losers,
         "market_status": market_status,
         "block_deals": block_deals,
-        "nse_fiidii_data": nse_fiidii_data
+        "nse_fiidii_data": nse_fiidii_data,
+        "nse_event": nse_event[0:10]
     })
-
-
 
 
 def option_chain_dashboard(request):
@@ -56,7 +56,6 @@ def option_chain_dashboard(request):
 
 def option_chain_view(request, symbol="NIFTY"):
 
-    # Your existing function with Greeks calculation
     data = get_nse_option_chain_with_greeks(symbol)
     return JsonResponse(data, safe=False, json_dumps_params={"indent": 2})
 
