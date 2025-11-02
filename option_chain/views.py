@@ -6,6 +6,57 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from nsepython import nse_get_top_gainers, nse_get_top_losers,nse_marketStatus,nse_largedeals,nse_blockdeal,nse_fiidii,nse_events
 
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
+from django.contrib import messages
+from django.shortcuts import redirect
+
+def user_login(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            messages.success(request, f"Welcome {username}!")
+            return redirect('option_chain:home')  # Redirect to home page
+        else:
+            messages.error(request, "Invalid credentials")
+            return render(request, 'option_chain/login.html')
+
+    return render(request, 'option_chain/login.html')
+
+
+def user_logout(request):
+    logout(request)
+    messages.success(request, "Logged out successfully.")
+    return redirect('option_chain:login')
+
+
+def register(request):
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        confirm_password = request.POST.get("confirm")
+
+        if password != confirm_password:
+            messages.error(request, "Passwords do not match.")
+            return redirect("option_chain:register")
+
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Username already exists.")
+            return redirect("option_chain:register")
+
+        User.objects.create_user(username=username, password=password)
+        messages.success(request, "Account created successfully! Please log in.")
+        return redirect("option_chain:login")
+
+    return render(request, "option_chain/register.html")
+
+@login_required(login_url='login/')
 
 def home(request):
     try:

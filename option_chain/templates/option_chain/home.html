@@ -40,6 +40,96 @@
             100% { transform: translate(50px, 50px); }
         }
 
+        /* --- User Header --- */
+        .user-header {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 12px 20px;
+            border-radius: 50px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            animation: slideInRight 0.6s ease-out;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2em;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .user-greeting {
+            font-size: 0.85em;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .user-name {
+            font-size: 1em;
+            color: #2c3e50;
+            font-weight: 700;
+        }
+
+        .logout-btn {
+            padding: 8px 18px;
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .logout-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+        }
+
+        .logout-btn:active {
+            transform: scale(0.98);
+        }
+
         .dashboard {
             position: relative;
             z-index: 1;
@@ -50,7 +140,7 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3),
                         0 0 100px rgba(126, 34, 206, 0.2);
             max-width: 1400px;
-            margin: 0 auto;
+            margin: 60px auto 0;
             animation: fadeInUp 0.8s ease-out;
         }
 
@@ -67,7 +157,7 @@
 
         h1 {
             text-align: center;
-            margin-bottom: 35px;
+            margin-bottom: 10px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -88,6 +178,13 @@
                 opacity: 1;
                 transform: translateY(0);
             }
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 35px;
+            font-size: 0.9em;
         }
 
         /* --- Buttons --- */
@@ -163,10 +260,10 @@
             width: 200%;
             height: 200%;
             background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
-            animation: pulse 4s ease-in-out infinite;
+            animation: pulseMarket 4s ease-in-out infinite;
         }
 
-        @keyframes pulse {
+        @keyframes pulseMarket {
             0%, 100% { transform: scale(1); opacity: 0.5; }
             50% { transform: scale(1.1); opacity: 0.8; }
         }
@@ -531,8 +628,15 @@
 
         /* --- Responsive --- */
         @media (max-width: 900px) {
+            .user-header {
+                position: static;
+                margin-bottom: 20px;
+                justify-content: center;
+            }
+
             .dashboard {
                 padding: 25px;
+                margin-top: 0;
             }
 
             h1 {
@@ -571,20 +675,37 @@
     </style>
 </head>
 <body>
+    <!-- User Header -->
+    {% if user.is_authenticated %}
+    <div class="user-header">
+        <div class="user-avatar">
+            {{ user.username|slice:":1"|upper }}
+        </div>
+        <div class="user-info">
+            <div class="user-greeting">Welcome back, trader! 🎯</div>
+            <div class="user-name">{{ user.username }}</div>
+        </div>
+        <a href="{% url 'option_chain:logout' %}" class="logout-btn">
+            <span>🚪</span>
+            <span>Logout</span>
+        </a>
+    </div>
+    {% endif %}
+
     <div class="dashboard">
-        <h1>Market Dashboard</h1>
-        <p style="text-align: center; color: #312e2e; margin-bottom: 30px; font-size: 0.9em;">By Karan Ghadage</p>
+        <h1>📈 Market Dashboard</h1>
+        <p class="subtitle">By Karan Ghadage | Real-time Market Intelligence</p>
 
         <!-- Navigation Buttons -->
         <div class="btn-group">
-            <a href="{% url 'option_chain:option_chain_dashboard' %}" class="btn">Derivatives Market</a>
-            <a href="#" class="btn">Cash Market</a>
-            <a href="#" class="btn">Money Market</a>
+            <a href="{% url 'option_chain:option_chain_dashboard' %}" class="btn">🎲 Derivatives Market</a>
+            <a href="#" class="btn">💰 Cash Market</a>
+            <a href="#" class="btn">💵 Money Market</a>
         </div>
 
         <!-- Market Status -->
         <div class="market-status">
-            <h2>Market Status</h2>
+            <h2>📊 Market Status</h2>
             {% if market_status.marketState %}
                 <ul>
                     {% for state in market_status.marketState %}
@@ -605,7 +726,7 @@
         <div class="tables">
             <div class="table-container">
                 <table class="gainers">
-                    <thead><tr><th>Top Gainers</th></tr></thead>
+                    <thead><tr><th>🚀 Top Gainers</th></tr></thead>
                     <tbody>
                         {% for g in top_gainers %}
                             <tr><td>{{ g.symbol|default:"-" }} - {{ g.meta.companyName|default:"-" }}</td></tr>
@@ -618,7 +739,7 @@
 
             <div class="table-container">
                 <table class="losers">
-                    <thead><tr><th>Top Losers</th></tr></thead>
+                    <thead><tr><th>📉 Top Losers</th></tr></thead>
                     <tbody>
                         {% for l in top_losers %}
                             <tr><td>{{ l.symbol|default:"-" }} - {{ l.meta.companyName|default:"-" }}</td></tr>
@@ -632,13 +753,13 @@
 
         <!-- FII & DII Data Section -->
         <div class="fii-dii-section">
-            <h2>FII & DII Activity</h2>
+            <h2>💼 FII & DII Activity</h2>
             <div class="fii-dii-grid">
                 {% if nse_fiidii_data is not None %}
                     {% for entry in nse_fiidii_data %}
                         <div class="fii-dii-card">
                             <div class="card-header">
-                                <span class="card-icon">{% if 'FII' in entry.category %}{% else %}{% endif %}</span>
+                                <span class="card-icon">{% if 'FII' in entry.category %}🌍{% else %}🏢{% endif %}</span>
                                 <h3>{{ entry.category|default:"N/A" }}</h3>
                             </div>
                             <div class="card-body">
@@ -671,7 +792,7 @@
 
         <!-- Block Deals Section -->
         <div class="deals-section">
-            <h2>Block Deals</h2>
+            <h2>🤝 Block Deals</h2>
             <table class="deals">
                 <thead><tr><th>Symbol | Price | Qty | Value</th></tr></thead>
                 <tbody>
@@ -688,7 +809,7 @@
 
         <!-- Events Section -->
         <div class="events-section">
-            <h2>Market Events</h2>
+            <h2>📅 Market Events</h2>
             <div class="events-grid">
                 {% if nse_event %}
                     {% for event in nse_event %}

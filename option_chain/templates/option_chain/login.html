@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login | Option Chain Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Floating money animations */
+        .money {
+            position: absolute;
+            font-size: 2rem;
+            opacity: 0.3;
+            animation: float 15s infinite ease-in-out;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-100vh) rotate(360deg); }
+        }
+        
+        .money:nth-child(1) { left: 10%; animation-delay: 0s; }
+        .money:nth-child(2) { left: 30%; animation-delay: 2s; }
+        .money:nth-child(3) { left: 50%; animation-delay: 4s; }
+        .money:nth-child(4) { left: 70%; animation-delay: 1s; }
+        .money:nth-child(5) { left: 90%; animation-delay: 3s; }
+        
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 400px;
+            width: 90%;
+            position: relative;
+            z-index: 1;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #667eea;
+            font-size: 2rem;
+            margin-bottom: 10px;
+            animation: bounce 1s ease infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+        
+        .stock-ticker {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-family: monospace;
+            color: #333;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .green { color: #10b981; }
+        .red { color: #ef4444; }
+        
+        .messages {
+            margin-bottom: 20px;
+        }
+        
+        .message {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #dc2626;
+            animation: shake 0.5s ease;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px 15px 12px 40px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: scale(1.02);
+        }
+        
+        .icon {
+            position: absolute;
+            left: 12px;
+            top: 38px;
+            font-size: 1.2rem;
+        }
+        
+        .btn-login {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-login:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-login:active {
+            transform: translateY(0);
+        }
+        
+        .btn-login::before {
+            content: '🚀';
+            position: absolute;
+            left: -30px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-login:hover::before {
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .register-link {
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 10px;
+        }
+        
+        .register-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .register-link a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+        
+        .fun-fact {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.85rem;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            color: #667eea;
+            margin-top: 10px;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating money emojis -->
+    <div class="money">💰</div>
+    <div class="money">📈</div>
+    <div class="money">💵</div>
+    <div class="money">🤑</div>
+    <div class="money">💸</div>
+    
+    <div class="container">
+        <div class="header">
+            <h2>🎯 Welcome Back, Trader!</h2>
+            <p class="subtitle">Time to make some options dance 💃</p>
+        </div>
+        
+        <div class="stock-ticker">
+            <span class="green">GAINS</span> ↗ +420.69% | 
+            <span class="red">LOSSES</span> ↘ -0.01% | 
+            <span>VIBES</span> 📊 ATH
+        </div>
+        
+        {% if messages %}
+            <div class="messages">
+                {% for msg in messages %}
+                    <div class="message">
+                        ⚠️ {{ msg }}
+                        <br><small>(Oops! That didn't work. Try again, champion!)</small>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        <form method="POST" id="loginForm">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="username">Username (Your Trading Alias) 🎭</label>
+                <span class="icon">👤</span>
+                <input 
+                    type="text" 
+                    name="username" 
+                    id="username"
+                    placeholder="wolf_of_wall_street"
+                    required
+                >
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Secret Password (Shhh... 🤫)</label>
+                <span class="icon">🔐</span>
+                <input 
+                    type="password" 
+                    name="password" 
+                    id="password"
+                    placeholder="••••••••"
+                    required
+                >
+            </div>
+            
+            <button type="submit" class="btn-login">
+                Launch to Dashboard 🚀
+            </button>
+            
+            <div class="loading" id="loading">
+                <p>🔄 Calculating your portfolio's destiny...</p>
+            </div>
+        </form>
+        
+        <div class="register-link">
+            <p>Don't have an account? 😱</p>
+            <p>
+                <a href="{% url 'option_chain:register' %}">
+                    Join the Cool Kids Club →
+                </a>
+            </p>
+        </div>
+        
+        <div class="fun-fact">
+            💡 Fun Fact: 73% of traders refresh this page before market opens
+        </div>
+    </div>
+    
+    <script>
+        const form = document.getElementById('loginForm');
+        const loading = document.getElementById('loading');
+        const funFacts = [
+            "💡 Did you know? Options were invented when someone couldn't decide whether to buy or sell",
+            "💡 Fun Fact: The Greek letters in options trading are actually just fancy math emojis",
+            "💡 Pro Tip: Saying 'stonks' increases your returns by 420%",
+            "💡 Legend says: If you whisper 'theta decay' three times, your calls expire worthless",
+            "💡 Ancient wisdom: YOLO backwards is OLOY, which means nothing but sounds cool"
+        ];
+        
+        // Random fun fact on load
+        document.querySelector('.fun-fact').textContent = funFacts[Math.floor(Math.random() * funFacts.length)];
+        
+        form.addEventListener('submit', function(e) {
+            loading.classList.add('active');
+        });
+        
+        // Easter egg: Konami code
+        let konamiCode = [];
+        const correctCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+        
+        document.addEventListener('keydown', function(e) {
+            konamiCode.push(e.key);
+            konamiCode = konamiCode.slice(-10);
+            
+            if (JSON.stringify(konamiCode) === JSON.stringify(correctCode)) {
+                alert('🎮 Cheat code activated! All your options are now ITM! (Just kidding, that would be too easy)');
+            }
+        });
+    </script>
+</body>
+</html>
